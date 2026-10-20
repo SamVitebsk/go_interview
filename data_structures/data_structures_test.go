@@ -135,3 +135,44 @@ func TestUniqueRandom(t *testing.T) {
 		assert.Equal(t, got1, got2)
 	})
 }
+
+func TestUniqueRandomWithoutMap(t *testing.T) {
+	t.Run("неверные аргументы", func(t *testing.T) {
+		t.Parallel()
+
+		dummyRnd := rand.New(rand.NewPCG(1, 2))
+
+		got, err := UniqueRandomWithoutMap(-1, 10, dummyRnd)
+		assert.ErrorIs(t, err, ErrNegativeCount)
+		assert.Nil(t, got)
+
+		got, err = UniqueRandomWithoutMap(5, -1, dummyRnd)
+		assert.ErrorIs(t, err, ErrNegativeMax)
+		assert.Nil(t, got)
+
+		got, err = UniqueRandomWithoutMap(11, 10, dummyRnd)
+		assert.ErrorIs(t, err, ErrCountExceedsMax)
+		assert.Nil(t, got)
+
+		got, err = UniqueRandomWithoutMap(5, 10, nil)
+		assert.ErrorIs(t, err, ErrNilRandomSource)
+		assert.Nil(t, got)
+	})
+
+	t.Run("совпадение результатов с версией с мапой при одинаковом seed", func(t *testing.T) {
+		t.Parallel()
+
+		rnd1 := rand.New(rand.NewPCG(42, 99))
+		rnd2 := rand.New(rand.NewPCG(42, 99))
+		n := 20
+		maxVal := 50
+
+		gotWithMap, err1 := UniqueRandom(n, maxVal, rnd1)
+		require.NoError(t, err1)
+
+		gotWithoutMap, err2 := UniqueRandomWithoutMap(n, maxVal, rnd2)
+		require.NoError(t, err2)
+
+		assert.Equal(t, gotWithMap, gotWithoutMap)
+	})
+}

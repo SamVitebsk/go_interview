@@ -3,6 +3,7 @@ package data_structures
 import (
 	"errors"
 	"math/rand/v2"
+	"slices"
 )
 
 var (
@@ -21,6 +22,7 @@ var (
 
 // UniqueRandom генерирует и возвращает срез из n уникальных псевдослучайных чисел
 // в полуинтервале [0, max), используя переданный генератор rnd.
+// По памяти O(n), по времени в среднем O(n), может и больше из-за частых коллизий
 func UniqueRandom(n int, max int, rnd *rand.Rand) ([]int, error) {
 	if n < 0 {
 		return nil, ErrNegativeCount
@@ -42,6 +44,35 @@ func UniqueRandom(n int, max int, rnd *rand.Rand) ([]int, error) {
 		num := rnd.IntN(max)
 		if _, exists := uniqueNums[num]; !exists {
 			uniqueNums[num] = struct{}{}
+			res = append(res, num)
+		}
+	}
+
+	return res, nil
+}
+
+// UniqueRandomWithoutMap генерирует и возвращает срез из n уникальных псевдослучайных чисел
+// в полуинтервале [0, max), используя переданный генератор rnd.
+// По памяти O(n) (доп. память O(1)), по времени в среднем O(n²), может и больше из-за частых коллизий
+func UniqueRandomWithoutMap(n int, max int, rnd *rand.Rand) ([]int, error) {
+	if n < 0 {
+		return nil, ErrNegativeCount
+	}
+	if max < 0 {
+		return nil, ErrNegativeMax
+	}
+	if n > max {
+		return nil, ErrCountExceedsMax
+	}
+	if rnd == nil {
+		return nil, ErrNilRandomSource
+	}
+
+	res := make([]int, 0, n)
+
+	for len(res) < n {
+		num := rnd.IntN(max)
+		if !slices.Contains(res, num) {
 			res = append(res, num)
 		}
 	}
