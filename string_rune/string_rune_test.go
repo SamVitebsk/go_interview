@@ -2,6 +2,8 @@ package string_rune
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIsPalindrome(t *testing.T) {
@@ -117,9 +119,7 @@ func TestIsPalindrome(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got := IsPalindrome(tt.input); got != tt.want {
-				t.Errorf("IsPalindrome(%q) = %v, want %v", tt.input, got, tt.want)
-			}
+			assert.Equal(t, tt.want, IsPalindrome(tt.input))
 		})
 	}
 }

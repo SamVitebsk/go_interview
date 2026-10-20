@@ -1,9 +1,11 @@
 package pointer
 
 import (
-	"errors"
 	"math"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccount_Deposit(t *testing.T) {
@@ -39,21 +41,21 @@ func TestAccount_Deposit(t *testing.T) {
 			name:        "ошибка: нулевая сумма (неположительная)",
 			account:     &Account{balance: 100},
 			amount:      0,
-			wantBalance: 100, // баланс не должен измениться
+			wantBalance: 100,
 			wantErr:     ErrNonPositiveAmount,
 		},
 		{
 			name:        "ошибка: отрицательная сумма (неположительная)",
 			account:     &Account{balance: 100},
 			amount:      -50,
-			wantBalance: 100, // баланс не должен измениться
+			wantBalance: 100,
 			wantErr:     ErrNonPositiveAmount,
 		},
 		{
 			name:        "ошибка: переполнение int64 при сложении",
 			account:     &Account{balance: math.MaxInt64 - 10},
 			amount:      11,
-			wantBalance: math.MaxInt64 - 10, // баланс не должен измениться
+			wantBalance: math.MaxInt64 - 10,
 			wantErr:     ErrOverflow,
 		},
 	}
@@ -62,24 +64,16 @@ func TestAccount_Deposit(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.account.Deposit(tt.amount)
 
-			// 1. Проверяем ошибку операции
 			if tt.wantErr != nil {
-				if !errors.Is(err, tt.wantErr) {
-					t.Fatalf("Deposit() error = %v, wantErr %v", err, tt.wantErr)
-				}
-			} else if err != nil {
-				t.Fatalf("Deposit() неожиданная ошибка: %v", err)
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				assert.NoError(t, err)
 			}
 
-			// 2. Если аккаунт не nil — проверяем баланс через метод Balance()
 			if tt.account != nil {
 				gotBalance, err := tt.account.Balance()
-				if err != nil {
-					t.Fatalf("Balance() ошибка чтения: %v", err)
-				}
-				if gotBalance != tt.wantBalance {
-					t.Errorf("Balance() = %v, want %v", gotBalance, tt.wantBalance)
-				}
+				require.NoError(t, err)
+				assert.Equal(t, tt.wantBalance, gotBalance)
 			}
 		})
 	}
@@ -118,21 +112,21 @@ func TestAccount_Withdraw(t *testing.T) {
 			name:        "ошибка: нулевая сумма списания (неположительная)",
 			account:     &Account{balance: 100},
 			amount:      0,
-			wantBalance: 100, // баланс не изменился
+			wantBalance: 100,
 			wantErr:     ErrNonPositiveAmount,
 		},
 		{
 			name:        "ошибка: отрицательная сумма списания (неположительная)",
 			account:     &Account{balance: 100},
 			amount:      -20,
-			wantBalance: 100, // баланс не изменился
+			wantBalance: 100,
 			wantErr:     ErrNonPositiveAmount,
 		},
 		{
 			name:        "ошибка: недостаточный баланс",
 			account:     &Account{balance: 50},
 			amount:      51,
-			wantBalance: 50, // баланс не изменился
+			wantBalance: 50,
 			wantErr:     ErrInsufficientBalance,
 		},
 	}
@@ -141,24 +135,16 @@ func TestAccount_Withdraw(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.account.Withdraw(tt.amount)
 
-			// 1. Проверяем ошибку операции
 			if tt.wantErr != nil {
-				if !errors.Is(err, tt.wantErr) {
-					t.Fatalf("Withdraw() error = %v, wantErr %v", err, tt.wantErr)
-				}
-			} else if err != nil {
-				t.Fatalf("Withdraw() неожиданная ошибка: %v", err)
+				assert.ErrorIs(t, err, tt.wantErr)
+			} else {
+				assert.NoError(t, err)
 			}
 
-			// 2. Если аккаунт не nil — проверяем баланс через метод Balance()
 			if tt.account != nil {
 				gotBalance, err := tt.account.Balance()
-				if err != nil {
-					t.Fatalf("Balance() ошибка чтения: %v", err)
-				}
-				if gotBalance != tt.wantBalance {
-					t.Errorf("Balance() = %v, want %v", gotBalance, tt.wantBalance)
-				}
+				require.NoError(t, err)
+				assert.Equal(t, tt.wantBalance, gotBalance)
 			}
 		})
 	}

@@ -1,12 +1,11 @@
 package main
 
 import (
-	"slices"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-// TestDeferOrder проверяет обратный порядок выполнения трех defer (LIFO)
-// без зависимости от вывода в консоль (Требование №4).
 func TestDeferOrder(t *testing.T) {
 	var got []int
 
@@ -16,8 +15,5 @@ func TestDeferOrder(t *testing.T) {
 		defer func() { got = append(got, 3) }()
 	}()
 
-	want := []int{3, 2, 1}
-	if !slices.Equal(got, want) {
-		t.Errorf("got %v, want %v", got, want)
-	}
+	assert.Equal(t, []int{3, 2, 1}, got)
 }

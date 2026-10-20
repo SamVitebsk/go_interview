@@ -1,11 +1,11 @@
 package temperature
 
 import (
-	"errors"
-	"math"
 	"strconv"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseCelsius(t *testing.T) {
@@ -81,26 +81,16 @@ func TestParseCelsius(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := ParseCelsius(tt.raw)
 
-			// Кейс 1: Ожидали ошибку (tt.wantErr != nil)
 			if tt.wantErr != nil {
-				// Проверяем, что ошибка действительно возникла и распаковывается в tt.wantErr через errors.Is
-				if !errors.Is(err, tt.wantErr) {
-					t.Fatalf("ParseCelsius(%q) ждали ошибку %v, но получили: %v", tt.raw, tt.wantErr, err)
-				}
-				// Проверяем, что текст ошибки содержит исходную строку raw
-				if tt.raw != "" && !strings.Contains(err.Error(), tt.raw) {
-					t.Errorf("сообщение об ошибке %q не содержит исходную строку %q", err.Error(), tt.raw)
+				assert.ErrorIs(t, err, tt.wantErr)
+				if tt.raw != "" {
+					assert.Contains(t, err.Error(), tt.raw)
 				}
 				return
 			}
 
-			// Кейс 2: Ошибки быть не должно (tt.wantErr == nil)
-			if err != nil {
-				t.Fatalf("ParseCelsius(%q) неожиданная ошибка: %v", tt.raw, err)
-			}
-			if got != tt.want {
-				t.Errorf("ParseCelsius(%q) got = %v, want %v", tt.raw, got, tt.want)
-			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -138,7 +128,6 @@ func TestToFahrenheit(t *testing.T) {
 			c:    32767,
 			want: 59012.6,
 		},
-		// --- Кейсы, где из-за погрешности float64 результат вычисления ToFahrenheit отличается от точного десятичного числа ---
 		{
 			name: "погрешность float64: -158 C (ожидаем -252.4, функция возвращает -252.39999999999998)",
 			c:    -158,
@@ -160,12 +149,11 @@ func TestToFahrenheit(t *testing.T) {
 			want: -119.2,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ToFahrenheit(tt.c)
-			if math.Abs(got-tt.want) > epsilon {
-				t.Errorf("ToFahrenheit(%d) = %v, want %v (разница превышает epsilon %v)", tt.c, got, tt.want, epsilon)
-			}
+			assert.InDelta(t, tt.want, got, epsilon)
 		})
 	}
 }
